@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+	<settings>
+		<!-- 打印查询语句 -->
+		<setting name="logImpl" value="LOG4J2" />
+		
+		<!-- 开启延迟加载 -->
+		 <!-- lazyLoadingEnabled:延迟加载启动，默认是false -->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <!-- aggressiveLazyLoading：积极的懒加载，false的话按需加载，默认是true -->
+        <setting name="aggressiveLazyLoading" value="false"/>
+		<!-- 开启二级缓存，默认是false -->
+		<setting name="cacheEnabled" value="true"/>
+	</settings>
+
+	<!-- 为JAVA Bean起类别名 -->
+	<typeAliases>
+		<!-- 别名方式1，一个一个的配置 type中放置的是类的全路径，alias中放置的是类别名 -->
+		<!-- <typeAliase type="com.spring.bean.UserBean" alias="UserBean"></typeAliase> -->
+		<!-- 别名方式2，自动扫描，将JAVA类的类名作为类的类别名 -->
+		<package name="com.shuyu.bean" />
+	</typeAliases>
+
+	<plugins>
+		<!--打印sql拦截器 -->
+		<plugin interceptor="com.spring.utils.MybatisInterceptor"></plugin>
+	</plugins>
+
+
+	<mappers>
+		<!-- 告知映射文件方式1，一个一个的配置 -->
+		<mapper resource="com/shuyu/mapper/MybaitsDao.xml" />
+		<!-- <mapper resource="com/shuyu/mapper/ClassMapper.xml" /> -->
+		<!-- 告知映射文件方式2，自动扫描包内的Mapper接口与配置文件 -->
+		<!-- <package name="com/shuyu/mapper" /> -->
+	</mappers>
+</configuration>

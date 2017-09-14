@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	    http://www.springframework.org/schema/beans/spring-beans.xsd  
+	    http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-4.0.xsd
+        http://www.springframework.org/schema/util 
+        http://www.springframework.org/schema/util/spring-util-4.0.xsd 
+        http://www.springframework.org/schema/aop 
+        http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+	<context:property-placeholder location="classpath:jdbc.properties" />
+	<!--mybatis -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClass}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<property name="maxActive" value="30" />
+		<property name="maxIdle" value="5" />
+	</bean>
+	<!-- 配置session工厂 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 数据库连接池 -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- 加载mybatis的全局配置文件 -->
+		<property name="configLocation" value="classpath:myBatis.xml" />
+		<!--配置扫描式加载SQL映射文件,记得去掉mybatis-config配置 -->
+		<!-- <property name="mapperLocations" value="classpath:sql/*.xml"/> -->
+	</bean>
+
+	<context:annotation-config />
+	<context:component-scan base-package="com"></context:component-scan>
+	<!-- 配置一个 bean -->
+	<bean id="hello" class="com.shuyu.bean.Hello">
+		<!-- 为属性赋值 -->
+		<property name="hello" value="Hello World"></property>
+	</bean>
+
+	<bean id="user" class="com.shuyu.bean.UserBean">
+		<constructor-arg value="1"></constructor-arg>
+		<constructor-arg value="王"></constructor-arg>
+		<constructor-arg value="123243"></constructor-arg>
+	</bean>
+
+	<bean id="address" class="com.shuyu.bean.Address">
+		<property name="city" value="HuBei"></property>
+		<property name="street" value="GuangShanStreet"></property>
+	</bean>
+
+	<bean id="position" class="com.shuyu.bean.Position">
+		<property name="salary" value="$4000"></property>
+	</bean>
+
+	<bean id="person" class="com.shuyu.bean.Person" autowire="byType">
+	</bean>
+
+	<bean id="aopService" class="com.spring.service.AopService">
+	</bean>
+	<bean id="MybatisUtil" class="com.spring.utils.MybatisUtil">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"></property>
+	</bean>
+	
+	<bean id="mybaitsDaoimpl" class="com.shuyu.dao.impl.MybaitsDaoimpl">
+	</bean>
+	
+	<bean id="MybatisServiceImpl" class="com.spring.service.impl.MybatisServiceImpl">
+	    <property name="mybaitsDao" ref="mybaitsDaoimpl"></property>
+	</bean>
+
+
+	<!-- 配置事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<!--配置事务通知（事务的增强） -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<!-- propagation :事务传播行为 isolation :事务的隔离级别 read-only :只读 rollback-for:发生哪些异常回滚 
+				no-rollback-for :发生哪些异常不回滚 timeout :过期信息 -->
+			<tx:method name="update*" propagation="REQUIRED" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 启用事务注解 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<!-- 配置 AspectJ -->
+	<aop:aspectj-autoproxy proxy-target-class="true"></aop:aspectj-autoproxy>
+
+	<!-- 扫描切面类 -->
+	<bean class="com.spring.aop.LogAspect" id="logAspect"></bean>
+
+	<!-- aop配置 -->
+	<aop:config>
+		<!-- 切点 -->
+		<aop:pointcut
+			expression="execution(public void com.spring.service.impl.MybatisServiceImpl.*(..))"
+			id="aop" />
+
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="aop" />
+
+		<!-- 切面 : ref 的值是 切面类的id -->
+		<aop:aspect id="aspect" ref="logAspect">
+			<!-- 前置方法 : pointcut-ref 的值是 切点的id -->
+			<aop:before method="doBefore" pointcut-ref="aop" />
+			<!-- <aop:after method="doAfter" pointcut-ref="aop" /> -->
+			<!-- <aop:around method="doAround" pointcut-ref="aop" /> -->
+			<aop:after-returning method="doReturn"
+				pointcut-ref="aop" />
+			<!-- <aop:after-throwing method="doThrowing" throwing="ex" pointcut-ref="aop" 
+				/> -->
+		</aop:aspect>
+	</aop:config>
+
+</beans>  
